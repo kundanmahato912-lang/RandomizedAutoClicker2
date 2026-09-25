@@ -1,0 +1,16 @@
+workflows:
+  android-debug:
+    name: Randomized Auto Clicker - Debug APK
+    instance_type: linux_x2
+    environment:
+      groups:
+        - android
+      vars:
+        PACKAGE_NAME: "com.example.randomclicker"
+    scripts:
+      - name: Build debug APK
+        script: |
+          gradle --version
+          gradle assembleDebug --no-daemon
+    artifacts:
+      - app/build/outputs/apk/debug/*.apk
