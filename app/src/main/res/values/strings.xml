@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Randomized Alternating Auto Clicker</string>
+    <string name="accessibility_description">Allows the app to perform randomized taps at two user-selected screen positions.</string>
+</resources>
