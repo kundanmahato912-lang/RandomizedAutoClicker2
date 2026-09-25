@@ -461,52 +461,68 @@ class ClickAccessibilityService : AccessibilityService() {
      */
     private fun scheduleNext() {
 
-        if (!running) return
+    if (!running) return
 
-        // Randomly select target 1 OR target 2.
-        val chooseFirst =
-            Random.nextBoolean()
+    // Randomly select ONLY one target.
+    val chooseFirst =
+        Random.nextBoolean()
 
-        val x =
-            if (chooseFirst) {
-                x1 + 45f
-            } else {
-                x2 + 45f
-            }
+    val x =
+        if (chooseFirst) {
+            x1 + 45f
+        } else {
+            x2 + 45f
+        }
 
-        val y =
-            if (chooseFirst) {
-                y1 + 45f
-            } else {
-                y2 + 45f
-            }
+    val y =
+        if (chooseFirst) {
+            y1 + 45f
+        } else {
+            y2 + 45f
+        }
 
-        // Click only the selected target.
-        clickAt(
-            x,
-            y
+    // Click only the selected target.
+    clickAt(x, y)
+
+    // Read minimum and maximum interval.
+    val prefs =
+        getSharedPreferences(
+            "settings",
+            MODE_PRIVATE
         )
 
-        // Get fixed interval from settings.
-        val delay =
-            getSharedPreferences(
-                "settings",
-                MODE_PRIVATE
+    val minInterval =
+        prefs.getLong(
+            "min_interval_ms",
+            500L
+        ).coerceAtLeast(50L)
+
+    val maxInterval =
+        prefs.getLong(
+            "max_interval_ms",
+            700L
+        ).coerceAtLeast(minInterval)
+
+    // Generate a NEW random interval
+    // between minimum and maximum.
+    val randomDelay =
+        if (minInterval == maxInterval) {
+            minInterval
+        } else {
+            Random.nextLong(
+                minInterval,
+                maxInterval + 1
             )
-                .getLong(
-                    "interval_ms",
-                    defaultIntervalMs
-                )
-                .coerceAtLeast(50L)
+        }
 
-        // Next click after fixed interval.
-        handler.postDelayed(
-            {
-                scheduleNext()
-            },
-            delay
-        )
-    }
+    // Schedule the next click.
+    handler.postDelayed(
+        {
+            scheduleNext()
+        },
+        randomDelay
+    )
+}
 
     /**
      * Dispatch a single tap.
