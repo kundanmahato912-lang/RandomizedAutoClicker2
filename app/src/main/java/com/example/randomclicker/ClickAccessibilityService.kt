@@ -51,9 +51,6 @@ class ClickAccessibilityService : AccessibilityService() {
     private var lp1: WindowManager.LayoutParams? = null
     private var lp2: WindowManager.LayoutParams? = null
 
-    // Default fixed interval
-    private val defaultIntervalMs = 500L
-
     // Notification receiver
     private val receiver = object : BroadcastReceiver() {
 
