@@ -1,5 +1,6 @@
 package com.example.randomclicker
 
+import android.view.accessibility.AccessibilityEvent
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.app.Notification
