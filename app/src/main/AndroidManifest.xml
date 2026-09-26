@@ -6,7 +6,7 @@
 
     <application
         android:allowBackup="true"
-        android:label="Randomized Alternating Auto Clicker"
+        android:label="K Auto Clicker"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
