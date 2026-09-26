@@ -87,7 +87,7 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(backgroundColor)
-            setPadding(16, 16, 16, 30)
+            setPadding(16, 50, 16, 30)
         }
 
         scrollView.addView(root)
@@ -99,7 +99,7 @@ class MainActivity : Activity() {
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(20, 22, 20, 22)
+            setPadding(20, 38, 20, 22)
 
             background = roundedBackground(
                 Color.rgb(25, 115, 240),
@@ -109,7 +109,7 @@ class MainActivity : Activity() {
 
         val title = TextView(this).apply {
             text = "Random Auto Clicker"
-            textSize = 27f
+            textSize = 23f
             gravity = Gravity.CENTER
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
@@ -119,7 +119,7 @@ class MainActivity : Activity() {
 
         val subtitle = TextView(this).apply {
             text = "Randomly click Target 1 or Target 2"
-            textSize = 15f
+            textSize = 14f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
             setPadding(0, 6, 0, 15)
@@ -235,56 +235,80 @@ class MainActivity : Activity() {
             sectionTitle("⚡  Quick Presets")
         )
 
-        val presetRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-        }
+        val presetRow1 = LinearLayout(this).apply {
+    orientation = LinearLayout.HORIZONTAL
+}
 
-        val fastButton = presetButton(
-            "FAST",
-            "100 - 200 ms"
-        )
+val presetRow2 = LinearLayout(this).apply {
+    orientation = LinearLayout.HORIZONTAL
+}
 
-        val normalButton = presetButton(
-            "NORMAL",
-            "500 - 700 ms"
-        )
+val fastButton = presetButton(
+    "FAST",
+    "100 - 200 ms"
+)
 
-        val slowButton = presetButton(
-            "SLOW",
-            "2500 - 2700 ms"
-        )
+val normalButton = presetButton(
+    "NORMAL",
+    "500 - 700 ms"
+)
 
-        val customButton = presetButton(
-            "CUSTOM",
-            "Manual"
-        )
+val slowButton = presetButton(
+    "SLOW",
+    "2500 - 2700 ms"
+)
 
-        fastButton.setOnClickListener {
-            setInterval(100, 200)
-        }
+val customButton = presetButton(
+    "CUSTOM",
+    "Manual"
+)
 
-        normalButton.setOnClickListener {
-            setInterval(500, 700)
-        }
+fastButton.setOnClickListener {
+    setInterval(100, 200)
+}
 
-        slowButton.setOnClickListener {
-            setInterval(2500, 2700)
-        }
+normalButton.setOnClickListener {
+    setInterval(500, 700)
+}
 
-        customButton.setOnClickListener {
-            Toast.makeText(
-                this,
-                "Enter your own interval below",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+slowButton.setOnClickListener {
+    setInterval(2500, 2700)
+}
 
-        presetRow.addView(fastButton, weightParams())
-        presetRow.addView(normalButton, weightParams())
-        presetRow.addView(slowButton, weightParams())
-        presetRow.addView(customButton, weightParams())
+customButton.setOnClickListener {
+    Toast.makeText(
+        this,
+        "Enter your own interval below",
+        Toast.LENGTH_SHORT
+    ).show()
+}
 
-        presetCard.addView(presetRow)
+presetRow1.addView(
+    fastButton,
+    weightParams()
+)
+
+presetRow1.addView(
+    normalButton,
+    weightParams()
+)
+
+presetRow2.addView(
+    slowButton,
+    weightParams()
+)
+
+presetRow2.addView(
+    customButton,
+    weightParams()
+)
+
+presetCard.addView(presetRow1)
+
+presetCard.addView(
+    presetRow2,
+    marginParams(0, 6, 0, 0)
+)
 
         root.addView(
             presetCard,
@@ -968,25 +992,26 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun presetButton(
-        title: String,
-        subtitle: String
-    ): Button {
+  private fun presetButton(
+    title: String,
+    subtitle: String
+): Button {
 
-        return Button(this).apply {
-            text = "$title\n$subtitle"
-            textSize = 10f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(darkBlue)
+    return Button(this).apply {
+        text = "$title\n$subtitle"
+        textSize = 12f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(darkBlue)
 
-            background = roundedBackground(
-                Color.rgb(232, 240, 255),
-                15
-            )
+        background = roundedBackground(
+            Color.rgb(232, 240, 255),
+            15
+        )
 
-            minimumHeight = 62
-        }
+        minHeight = 68
+        minimumHeight = 68
     }
+}
 
     // Returns both container and EditText
     private fun inputBox(
@@ -1070,7 +1095,7 @@ class MainActivity : Activity() {
 
         val labelView = TextView(this).apply {
             text = label
-            textSize = 10f
+            textSize = 12f
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
             setTextColor(darkBlue)
