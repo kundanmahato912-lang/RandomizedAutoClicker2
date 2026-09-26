@@ -36,14 +36,14 @@ class ClickAccessibilityService : AccessibilityService() {
 
         private const val NOTIFICATION_ID = 7
 
-        // Counting mode
         private const val MODE_RESET = "RESET"
         private const val MODE_CONTINUE = "CONTINUE"
     }
 
-    // ---------------------------------------------------------
+
+    // =========================================================
     // WINDOW / HANDLER
-    // ---------------------------------------------------------
+    // =========================================================
 
     private lateinit var wm: WindowManager
 
@@ -53,9 +53,9 @@ class ClickAccessibilityService : AccessibilityService() {
     private var running = false
 
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TARGET POSITIONS
-    // ---------------------------------------------------------
+    // =========================================================
 
     private var x1 = 250f
     private var y1 = 500f
@@ -64,17 +64,17 @@ class ClickAccessibilityService : AccessibilityService() {
     private var y2 = 900f
 
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TARGET VIEWS
-    // ---------------------------------------------------------
+    // =========================================================
 
     private var target1: TextView? = null
     private var target2: TextView? = null
 
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TARGET LAYOUT PARAMS
-    // ---------------------------------------------------------
+    // =========================================================
 
     private var lp1:
             WindowManager.LayoutParams? = null
@@ -83,9 +83,9 @@ class ClickAccessibilityService : AccessibilityService() {
             WindowManager.LayoutParams? = null
 
 
-    // ---------------------------------------------------------
-    // EMERGENCY START / STOP BUTTON
-    // ---------------------------------------------------------
+    // =========================================================
+    // CONTROL BUTTON
+    // =========================================================
 
     private var controlButton: TextView? = null
 
@@ -93,19 +93,19 @@ class ClickAccessibilityService : AccessibilityService() {
             WindowManager.LayoutParams? = null
 
 
-    // ---------------------------------------------------------
-    // COMPACT COUNTER
-    // ---------------------------------------------------------
+    // =========================================================
+    // BIGGER COMPACT INFO OVERLAY
+    // =========================================================
 
-    private var counterView: TextView? = null
+    private var infoOverlay: TextView? = null
 
-    private var counterParams:
+    private var infoOverlayParams:
             WindowManager.LayoutParams? = null
 
 
-    // ---------------------------------------------------------
-    // RESET / CONTINUE MODE BUTTON
-    // ---------------------------------------------------------
+    // =========================================================
+    // RESET / CONTINUE BUTTON
+    // =========================================================
 
     private var modeButton: TextView? = null
 
@@ -113,9 +113,9 @@ class ClickAccessibilityService : AccessibilityService() {
             WindowManager.LayoutParams? = null
 
 
-    // ---------------------------------------------------------
+    // =========================================================
     // COUNTERS
-    // ---------------------------------------------------------
+    // =========================================================
 
     private var totalClicks = 0L
 
@@ -124,27 +124,17 @@ class ClickAccessibilityService : AccessibilityService() {
     private var target2Clicks = 0L
 
 
-    // ---------------------------------------------------------
+    // =========================================================
     // COUNTING MODE
-    // ---------------------------------------------------------
-
-    /*
-     * Default mode = RESET
-     *
-     * RESET:
-     * START karne par count 0 se start hoga.
-     *
-     * CONTINUE:
-     * START karne par previous count continue hoga.
-     */
+    // =========================================================
 
     private var countingMode =
         MODE_RESET
 
 
-    // ---------------------------------------------------------
+    // =========================================================
     // NOTIFICATION RECEIVER
-    // ---------------------------------------------------------
+    // =========================================================
 
     private val receiver =
         object : BroadcastReceiver() {
@@ -160,8 +150,11 @@ class ClickAccessibilityService : AccessibilityService() {
                 ) {
 
                     if (running) {
+
                         stopRandomClicks()
+
                     } else {
+
                         startRandomClicks()
                     }
                 }
@@ -182,7 +175,7 @@ class ClickAccessibilityService : AccessibilityService() {
                 WINDOW_SERVICE
             ) as WindowManager
 
-        loadCountingData()
+        loadData()
 
         createChannel()
 
@@ -192,15 +185,11 @@ class ClickAccessibilityService : AccessibilityService() {
 
         showControlButton()
 
-        showCounter()
+        showInfoOverlay()
 
         showModeButton()
 
-        updateControlButton()
-
-        updateCounter()
-
-        updateModeButton()
+        updateAllOverlay()
 
         updateNotification()
     }
@@ -213,8 +202,7 @@ class ClickAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(
         event: AccessibilityEvent?
     ) {
-        // This app does not need
-        // accessibility events.
+        // Accessibility events are not required.
     }
 
 
@@ -322,9 +310,13 @@ class ClickAccessibilityService : AccessibilityService() {
                 )
 
                 .setContentText(
+
                     if (running) {
+
                         "Running • random target & interval"
+
                     } else {
+
                         "Stopped • ready to start"
                     }
                 )
@@ -391,7 +383,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // CREATE TARGET
+    // MAKE TARGET
     // =========================================================
 
     private fun makeTarget(
@@ -411,6 +403,7 @@ class ClickAccessibilityService : AccessibilityService() {
             )
 
             setBackgroundColor(
+
                 if (label == "1") {
 
                     0xFF6750A4.toInt()
@@ -453,13 +446,12 @@ class ClickAccessibilityService : AccessibilityService() {
                         Gravity.START
 
             this.x = x
-
             this.y = y
         }
 
 
     // =========================================================
-    // DRAG TARGET
+    // DRAG TARGETS
     // =========================================================
 
     private fun addDraggable(
@@ -469,6 +461,7 @@ class ClickAccessibilityService : AccessibilityService() {
     ) {
 
         v.setOnTouchListener(
+
             object : View.OnTouchListener {
 
                 var downX = 0f
@@ -481,9 +474,6 @@ class ClickAccessibilityService : AccessibilityService() {
                     view: View,
                     e: MotionEvent
                 ): Boolean {
-
-                    // Target cannot be dragged
-                    // while auto click is running.
 
                     if (running) {
                         return false
@@ -530,6 +520,7 @@ class ClickAccessibilityService : AccessibilityService() {
                                 p
                             )
 
+
                             if (first) {
 
                                 x1 =
@@ -570,7 +561,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // EMERGENCY START / STOP BUTTON
+    // START / STOP BUTTON
     // =========================================================
 
     private fun showControlButton() {
@@ -584,7 +575,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
                 text = "START"
 
-                textSize = 15f
+                textSize = 16f
 
                 gravity =
                     Gravity.CENTER
@@ -598,10 +589,10 @@ class ClickAccessibilityService : AccessibilityService() {
                 )
 
                 setPadding(
-                    12,
-                    6,
-                    12,
-                    6
+                    16,
+                    8,
+                    16,
+                    8
                 )
 
                 setOnClickListener {
@@ -621,8 +612,8 @@ class ClickAccessibilityService : AccessibilityService() {
         controlButtonParams =
             WindowManager.LayoutParams(
 
-                140,
-                60,
+                150,
+                65,
 
                 WindowManager.LayoutParams
                     .TYPE_ACCESSIBILITY_OVERLAY,
@@ -640,7 +631,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
                 x = 0
 
-                y = 70
+                y = 65
             }
 
 
@@ -682,22 +673,23 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // SHOW COMPACT COUNTER
+    // SHOW INFO OVERLAY
     // =========================================================
 
-    private fun showCounter() {
+    private fun showInfoOverlay() {
 
-        if (counterView != null) {
+        if (infoOverlay != null) {
             return
         }
 
-        counterView =
+        infoOverlay =
             TextView(this).apply {
 
                 text =
-                    "T:0  ①:0  ②:0"
+                    "T:0   ①:0   ②:0\n" +
+                    "Limit:Unlimited   Left:∞"
 
-                textSize = 11f
+                textSize = 12f
 
                 gravity =
                     Gravity.CENTER
@@ -711,19 +703,19 @@ class ClickAccessibilityService : AccessibilityService() {
                 )
 
                 setPadding(
-                    6,
-                    2,
-                    6,
-                    2
+                    8,
+                    4,
+                    8,
+                    4
                 )
             }
 
 
-        counterParams =
+        infoOverlayParams =
             WindowManager.LayoutParams(
 
-                140,
-                32,
+                250,
+                62,
 
                 WindowManager.LayoutParams
                     .TYPE_ACCESSIBILITY_OVERLAY,
@@ -741,30 +733,63 @@ class ClickAccessibilityService : AccessibilityService() {
 
                 x = 0
 
-                y = 132
+                y = 135
             }
 
 
         wm.addView(
-            counterView,
-            counterParams
+            infoOverlay,
+            infoOverlayParams
         )
     }
 
 
     // =========================================================
-    // UPDATE COUNTER
+    // UPDATE INFO OVERLAY
     // =========================================================
 
-    private fun updateCounter() {
+    private fun updateInfoOverlay() {
 
-        counterView?.text =
-            "T:$totalClicks  ①:$target1Clicks  ②:$target2Clicks"
+        val limit =
+            getClickLimit()
+
+        val remaining =
+            if (limit <= 0L) {
+
+                "∞"
+
+            } else {
+
+                (limit - totalClicks)
+                    .coerceAtLeast(0L)
+                    .toString()
+            }
+
+
+        val modeText =
+            if (
+                countingMode ==
+                MODE_RESET
+            ) {
+
+                "RESET (R)"
+
+            } else {
+
+                "CONTINUE (C)"
+            }
+
+
+        infoOverlay?.text =
+            "T:$totalClicks   ①:$target1Clicks   ②:$target2Clicks\n" +
+            "Limit:${if (limit <= 0L) "Unlimited" else limit}   " +
+            "Left:$remaining\n" +
+            "Mode: $modeText"
     }
 
 
     // =========================================================
-    // SHOW RESET / CONTINUE BUTTON
+    // SHOW R / C BUTTON
     // =========================================================
 
     private fun showModeButton() {
@@ -776,10 +801,9 @@ class ClickAccessibilityService : AccessibilityService() {
         modeButton =
             TextView(this).apply {
 
-                text =
-                    "R"
+                text = "R"
 
-                textSize = 10f
+                textSize = 12f
 
                 gravity =
                     Gravity.CENTER
@@ -789,22 +813,15 @@ class ClickAccessibilityService : AccessibilityService() {
                 )
 
                 setBackgroundColor(
-                    0x99000000.toInt()
+                    0xFF555555.toInt()
                 )
 
                 setPadding(
+                    4,
                     2,
-                    2,
-                    2,
+                    4,
                     2
                 )
-
-                /*
-                 * Tap this small button to switch:
-                 *
-                 * R = RESET
-                 * C = CONTINUE
-                 */
 
                 setOnClickListener {
 
@@ -824,6 +841,8 @@ class ClickAccessibilityService : AccessibilityService() {
                     saveCountingMode()
 
                     updateModeButton()
+
+                    updateInfoOverlay()
                 }
             }
 
@@ -831,8 +850,8 @@ class ClickAccessibilityService : AccessibilityService() {
         modeButtonParams =
             WindowManager.LayoutParams(
 
-                36,
-                28,
+                45,
+                32,
 
                 WindowManager.LayoutParams
                     .TYPE_ACCESSIBILITY_OVERLAY,
@@ -848,9 +867,9 @@ class ClickAccessibilityService : AccessibilityService() {
                     Gravity.TOP or
                             Gravity.CENTER_HORIZONTAL
 
-                x = 80
+                x = 105
 
-                y = 132
+                y = 135
             }
 
 
@@ -862,30 +881,29 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // UPDATE MODE BUTTON
+    // UPDATE R / C BUTTON
     // =========================================================
 
     private fun updateModeButton() {
 
-        modeButton?.let { button ->
+        modeButton?.text =
 
             if (
                 countingMode ==
                 MODE_RESET
             ) {
 
-                button.text = "R"
+                "R"
 
             } else {
 
-                button.text = "C"
+                "C"
             }
-        }
     }
 
 
     // =========================================================
-    // CLICK THROUGH TARGETS
+    // CLICK THROUGH
     // =========================================================
 
     private fun setClickThrough(
@@ -909,6 +927,7 @@ class ClickAccessibilityService : AccessibilityService() {
                     it.flags and flag.inv()
                 }
 
+
             target1?.let { view ->
 
                 wm.updateViewLayout(
@@ -931,6 +950,7 @@ class ClickAccessibilityService : AccessibilityService() {
                     it.flags and flag.inv()
                 }
 
+
             target2?.let { view ->
 
                 wm.updateViewLayout(
@@ -943,7 +963,25 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // START RANDOM CLICKS
+    // GET CLICK LIMIT
+    // =========================================================
+
+    private fun getClickLimit(): Long {
+
+        return getSharedPreferences(
+            "settings",
+            MODE_PRIVATE
+        )
+            .getLong(
+                "click_limit",
+                0L
+            )
+            .coerceAtLeast(0L)
+    }
+
+
+    // =========================================================
+    // START
     // =========================================================
 
     fun startRandomClicks() {
@@ -955,7 +993,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
         /*
          * RESET mode:
-         * Every START begins from zero.
+         * START -> count becomes zero.
          */
 
         if (
@@ -970,30 +1008,48 @@ class ClickAccessibilityService : AccessibilityService() {
             target2Clicks = 0L
 
             saveCountingData()
+        }
 
-            updateCounter()
+
+        val limit =
+            getClickLimit()
+
+
+        /*
+         * If previous count has already
+         * reached the limit, don't start.
+         */
+
+        if (
+            limit > 0L &&
+            totalClicks >= limit
+        ) {
+
+            running = false
+
+            updateAllOverlay()
+
+            updateNotification()
+
+            return
         }
 
 
         running = true
 
 
-        // Targets become click-through.
         setClickThrough(true)
 
-
-        updateControlButton()
+        updateAllOverlay()
 
         updateNotification()
 
-
-        // Start clicking loop.
         scheduleNext()
     }
 
 
     // =========================================================
-    // STOP RANDOM CLICKS
+    // STOP
     // =========================================================
 
     fun stopRandomClicks() {
@@ -1002,8 +1058,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
         /*
-         * Remove every pending callback.
-         * This immediately stops the loop.
+         * Cancel all pending callbacks.
          */
 
         handler.removeCallbacksAndMessages(
@@ -1017,17 +1072,9 @@ class ClickAccessibilityService : AccessibilityService() {
         }
 
 
-        /*
-         * Save count so CONTINUE mode
-         * can continue from this value.
-         */
-
         saveCountingData()
 
-
-        updateControlButton()
-
-        updateCounter()
+        updateAllOverlay()
 
         updateNotification()
     }
@@ -1044,8 +1091,27 @@ class ClickAccessibilityService : AccessibilityService() {
         }
 
 
+        val limit =
+            getClickLimit()
+
+
         /*
-         * Randomly select EXACTLY ONE target.
+         * Safety check before another click.
+         */
+
+        if (
+            limit > 0L &&
+            totalClicks >= limit
+        ) {
+
+            stopRandomClicks()
+
+            return
+        }
+
+
+        /*
+         * Select exactly ONE target.
          */
 
         val chooseFirst =
@@ -1075,7 +1141,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
         /*
-         * Count the selected target.
+         * Count this click.
          */
 
         totalClicks++
@@ -1091,22 +1157,13 @@ class ClickAccessibilityService : AccessibilityService() {
         }
 
 
-        /*
-         * Update overlay immediately.
-         */
-
-        updateCounter()
-
-
-        /*
-         * Save current count.
-         */
-
         saveCountingData()
 
+        updateAllOverlay()
+
 
         /*
-         * Perform exactly ONE click.
+         * Perform exactly one tap.
          */
 
         clickAt(
@@ -1115,9 +1172,25 @@ class ClickAccessibilityService : AccessibilityService() {
         )
 
 
-        // -----------------------------------------------------
-        // RANDOM INTERVAL
-        // -----------------------------------------------------
+        /*
+         * If limit reached by this click,
+         * STOP immediately.
+         */
+
+        if (
+            limit > 0L &&
+            totalClicks >= limit
+        ) {
+
+            stopRandomClicks()
+
+            return
+        }
+
+
+        // =====================================================
+        // RANDOM MIN-MAX INTERVAL
+        // =====================================================
 
         val prefs =
             getSharedPreferences(
@@ -1130,24 +1203,22 @@ class ClickAccessibilityService : AccessibilityService() {
             prefs.getLong(
                 "min_interval_ms",
                 500L
-            ).coerceAtLeast(50L)
+            )
+                .coerceAtLeast(50L)
 
 
         val maxInterval =
             prefs.getLong(
                 "max_interval_ms",
                 700L
-            ).coerceAtLeast(
-                minInterval
             )
+                .coerceAtLeast(
+                    minInterval
+                )
 
-
-        /*
-         * Generate a NEW random delay
-         * between minimum and maximum.
-         */
 
         val randomDelay =
+
             if (
                 minInterval ==
                 maxInterval
@@ -1180,7 +1251,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // PERFORM SINGLE TAP
+    // SINGLE TAP
     // =========================================================
 
     private fun clickAt(
@@ -1222,7 +1293,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // SAVE COUNT
+    // SAVE COUNT DATA
     // =========================================================
 
     private fun saveCountingData() {
@@ -1253,10 +1324,10 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // LOAD COUNT
+    // LOAD DATA
     // =========================================================
 
-    private fun loadCountingData() {
+    private fun loadData() {
 
         val prefs =
             getSharedPreferences(
@@ -1295,7 +1366,7 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // SAVE COUNTING MODE
+    // SAVE MODE
     // =========================================================
 
     private fun saveCountingMode() {
@@ -1316,11 +1387,24 @@ class ClickAccessibilityService : AccessibilityService() {
 
 
     // =========================================================
-    // CLEANUP
+    // UPDATE EVERYTHING
+    // =========================================================
+
+    private fun updateAllOverlay() {
+
+        updateControlButton()
+
+        updateInfoOverlay()
+
+        updateModeButton()
+    }
+
+
+    // =========================================================
+    // DESTROY
     // =========================================================
 
     override fun onInterrupt() {
-
         // Nothing required.
     }
 
@@ -1365,7 +1449,7 @@ class ClickAccessibilityService : AccessibilityService() {
         }
 
 
-        counterView?.let {
+        infoOverlay?.let {
 
             runCatching {
 
