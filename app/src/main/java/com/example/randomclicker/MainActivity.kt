@@ -12,6 +12,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.text.InputType
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
@@ -45,22 +46,15 @@ class MainActivity : Activity() {
         private const val DEFAULT_CLICK_LIMIT = 0L
     }
 
-    // ============================================================
-    // COLORS
-    // ============================================================
-
+    // Colors
     private val blue = Color.rgb(25, 118, 255)
-    private val darkBlue = Color.rgb(18, 45, 90)
-    private val green = Color.rgb(24, 180, 82)
-    private val red = Color.rgb(235, 65, 75)
-    private val purple = Color.rgb(105, 70, 220)
-    private val pink = Color.rgb(235, 65, 130)
-    private val orange = Color.rgb(245, 155, 40)
-    private val background = Color.rgb(245, 248, 253)
-
-    // ============================================================
-    // ON CREATE
-    // ============================================================
+    private val darkBlue = Color.rgb(25, 45, 75)
+    private val green = Color.rgb(25, 175, 80)
+    private val red = Color.rgb(230, 60, 70)
+    private val purple = Color.rgb(105, 75, 210)
+    private val pink = Color.rgb(235, 70, 130)
+    private val orange = Color.rgb(235, 145, 35)
+    private val backgroundColor = Color.rgb(245, 248, 253)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +65,6 @@ class MainActivity : Activity() {
         )
 
         createUI()
-
         requestNotificationPermission()
     }
 
@@ -84,7 +77,7 @@ class MainActivity : Activity() {
     }
 
     // ============================================================
-    // MAIN UI
+    // CREATE UI
     // ============================================================
 
     private fun createUI() {
@@ -93,31 +86,33 @@ class MainActivity : Activity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(background)
+            setBackgroundColor(backgroundColor)
             setPadding(16, 16, 16, 30)
         }
 
         scrollView.addView(root)
 
-        // --------------------------------------------------------
+        // ========================================================
         // HEADER
-        // --------------------------------------------------------
+        // ========================================================
 
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(22, 22, 22, 22)
+            gravity = Gravity.CENTER
+            setPadding(20, 22, 20, 22)
+
             background = roundedBackground(
-                Color.rgb(20, 115, 245),
+                Color.rgb(25, 115, 240),
                 24
             )
         }
 
         val title = TextView(this).apply {
             text = "Random Auto Clicker"
-            textSize = 28f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
+            textSize = 27f
             gravity = Gravity.CENTER
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
         }
 
         header.addView(title)
@@ -125,9 +120,9 @@ class MainActivity : Activity() {
         val subtitle = TextView(this).apply {
             text = "Randomly click Target 1 or Target 2"
             textSize = 15f
-            setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
-            setPadding(0, 7, 0, 16)
+            setTextColor(Color.WHITE)
+            setPadding(0, 6, 0, 15)
         }
 
         header.addView(subtitle)
@@ -139,17 +134,17 @@ class MainActivity : Activity() {
 
         featureRow.addView(
             featureBox("●", "Random\nTarget"),
-            equalWeightParams()
+            weightParams()
         )
 
         featureRow.addView(
             featureBox("◷", "Random\nInterval"),
-            equalWeightParams()
+            weightParams()
         )
 
         featureRow.addView(
             featureBox("⚡", "Auto Stop\nLimit"),
-            equalWeightParams()
+            weightParams()
         )
 
         header.addView(featureRow)
@@ -159,9 +154,9 @@ class MainActivity : Activity() {
             marginParams(0, 0, 0, 14)
         )
 
-        // --------------------------------------------------------
-        // STATUS CARD
-        // --------------------------------------------------------
+        // ========================================================
+        // STATUS / TARGET CARD
+        // ========================================================
 
         val statusCard = card()
 
@@ -170,7 +165,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        val readyCircle = TextView(this).apply {
+        val readyIcon = TextView(this).apply {
             text = "▶"
             textSize = 24f
             gravity = Gravity.CENTER
@@ -179,8 +174,8 @@ class MainActivity : Activity() {
         }
 
         statusRow.addView(
-            readyCircle,
-            fixedParams(62, 62, 0, 0, 16, 0)
+            readyIcon,
+            fixedParams(58, 58, 0, 0, 12, 0)
         )
 
         val statusInfo = LinearLayout(this).apply {
@@ -189,7 +184,7 @@ class MainActivity : Activity() {
 
         statusText = TextView(this).apply {
             text = "READY"
-            textSize = 22f
+            textSize = 21f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(green)
         }
@@ -197,8 +192,8 @@ class MainActivity : Activity() {
         statusInfo.addView(statusText)
 
         val statusDescription = TextView(this).apply {
-            text = "Set your settings and start from the overlay button."
-            textSize = 14f
+            text = "Start and stop from the floating control."
+            textSize = 13f
             setTextColor(darkBlue)
         }
 
@@ -213,28 +208,14 @@ class MainActivity : Activity() {
             )
         )
 
-        // Targets
-
-        val target1 = targetView(
-            "1",
-            blue,
-            "Target 1"
-        )
-
-        val target2 = targetView(
-            "2",
-            pink,
-            "Target 2"
+        statusRow.addView(
+            targetView("1", blue, "Target 1"),
+            fixedParams(65, 75, 4, 0, 3, 0)
         )
 
         statusRow.addView(
-            target1,
-            fixedParams(80, 85, 8, 0, 4, 0)
-        )
-
-        statusRow.addView(
-            target2,
-            fixedParams(80, 85, 4, 0, 0, 0)
+            targetView("2", pink, "Target 2"),
+            fixedParams(65, 75, 3, 0, 0, 0)
         )
 
         statusCard.addView(statusRow)
@@ -244,9 +225,9 @@ class MainActivity : Activity() {
             marginParams(0, 0, 0, 14)
         )
 
-        // --------------------------------------------------------
+        // ========================================================
         // QUICK PRESETS
-        // --------------------------------------------------------
+        // ========================================================
 
         val presetCard = card()
 
@@ -260,17 +241,17 @@ class MainActivity : Activity() {
 
         val fastButton = presetButton(
             "FAST",
-            "100 – 200 ms"
+            "100 - 200 ms"
         )
 
         val normalButton = presetButton(
             "NORMAL",
-            "500 – 700 ms"
+            "500 - 700 ms"
         )
 
         val slowButton = presetButton(
             "SLOW",
-            "2500 – 2700 ms"
+            "2500 - 2700 ms"
         )
 
         val customButton = presetButton(
@@ -298,25 +279,10 @@ class MainActivity : Activity() {
             ).show()
         }
 
-        presetRow.addView(
-            fastButton,
-            equalWeightParams()
-        )
-
-        presetRow.addView(
-            normalButton,
-            equalWeightParams()
-        )
-
-        presetRow.addView(
-            slowButton,
-            equalWeightParams()
-        )
-
-        presetRow.addView(
-            customButton,
-            equalWeightParams()
-        )
+        presetRow.addView(fastButton, weightParams())
+        presetRow.addView(normalButton, weightParams())
+        presetRow.addView(slowButton, weightParams())
+        presetRow.addView(customButton, weightParams())
 
         presetCard.addView(presetRow)
 
@@ -325,9 +291,9 @@ class MainActivity : Activity() {
             marginParams(0, 0, 0, 14)
         )
 
-        // --------------------------------------------------------
-        // SETTINGS CARD
-        // --------------------------------------------------------
+        // ========================================================
+        // CLICK SETTINGS
+        // ========================================================
 
         val settingsCard = card()
 
@@ -335,48 +301,50 @@ class MainActivity : Activity() {
             sectionTitle("⚙  Click Settings")
         )
 
-        val settingsRow = LinearLayout(this).apply {
+        val minBox = inputBox(
+            "Minimum Interval (ms)",
+            "500",
+            "min"
+        )
+
+        val maxBox = inputBox(
+            "Maximum Interval (ms)",
+            "700",
+            "max"
+        )
+
+        val limitBox = inputBox(
+            "Click Limit",
+            "0 = Unlimited",
+            "limit"
+        )
+
+        minIntervalInput = minBox.second
+        maxIntervalInput = maxBox.second
+        clickLimitInput = limitBox.second
+
+        val inputRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
         }
 
-        settingsRow.addView(
-            inputBox(
-                "Minimum Interval (ms)",
-                "500"
-            ),
-            equalWeightParams()
+        inputRow.addView(
+            minBox.first,
+            weightParams()
         )
 
-        settingsRow.addView(
-            inputBox(
-                "Maximum Interval (ms)",
-                "700"
-            ),
-            equalWeightParams()
+        inputRow.addView(
+            maxBox.first,
+            weightParams()
         )
 
-        settingsRow.addView(
-            inputBox(
-                "Click Limit",
-                "0 = Unlimited"
-            ),
-            equalWeightParams()
+        inputRow.addView(
+            limitBox.first,
+            weightParams()
         )
 
-        settingsCard.addView(settingsRow)
+        settingsCard.addView(inputRow)
 
-        // Find the three EditTexts
-        minIntervalInput =
-            settingsRow.getChildAt(0)
-                .findViewWithTag("min") as EditText
-
-        maxIntervalInput =
-            settingsRow.getChildAt(1)
-                .findViewWithTag("max") as EditText
-
-        clickLimitInput =
-            settingsRow.getChildAt(2)
-                .findViewWithTag("limit") as EditText
+        // Load saved values
 
         minIntervalInput.setText(
             prefs.getLong(
@@ -400,10 +368,11 @@ class MainActivity : Activity() {
         )
 
         val saveButton = Button(this).apply {
-            text = "💾   SAVE SETTINGS"
+            text = "SAVE SETTINGS"
             textSize = 17f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
+
             background = roundedBackground(
                 blue,
                 18
@@ -420,7 +389,7 @@ class MainActivity : Activity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 58
             ).apply {
-                topMargin = 18
+                topMargin = 16
             }
         )
 
@@ -429,9 +398,9 @@ class MainActivity : Activity() {
             marginParams(0, 0, 0, 14)
         )
 
-        // --------------------------------------------------------
-        // STATISTICS CARD
-        // --------------------------------------------------------
+        // ========================================================
+        // STATISTICS
+        // ========================================================
 
         val statsCard = card()
 
@@ -450,10 +419,15 @@ class MainActivity : Activity() {
         )
 
         val resetButton = Button(this).apply {
-            text = "↻ RESET"
-            textSize = 13f
+            text = "RESET"
+            textSize = 12f
+            typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
-            background = roundedBackground(red, 20)
+
+            background = roundedBackground(
+                red,
+                18
+            )
 
             setOnClickListener {
                 resetStatistics()
@@ -462,91 +436,98 @@ class MainActivity : Activity() {
 
         statsHeader.addView(
             resetButton,
-            fixedParams(115, 48, 0, 0, 0, 0)
+            fixedParams(95, 45, 0, 0, 0, 0)
         )
 
         statsCard.addView(statsHeader)
 
-        // Statistics boxes
+        // First row
 
-        val statsRow1 = LinearLayout(this).apply {
+        val row1 = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
         }
 
-        totalText = statBox(
+        val totalBox = createStatBox(
             "Total",
             "0",
             blue
         )
 
-        target1Text = statBox(
+        val target1Box = createStatBox(
             "Target 1",
             "0",
             purple
         )
 
-        target2Text = statBox(
+        val target2Box = createStatBox(
             "Target 2",
             "0",
             pink
         )
 
-        statsRow1.addView(
-            totalText.parentAsView(),
-            equalWeightParams()
+        totalText = totalBox.second
+        target1Text = target1Box.second
+        target2Text = target2Box.second
+
+        row1.addView(
+            totalBox.first,
+            weightParams()
         )
 
-        statsRow1.addView(
-            target1Text.parentAsView(),
-            equalWeightParams()
+        row1.addView(
+            target1Box.first,
+            weightParams()
         )
 
-        statsRow1.addView(
-            target2Text.parentAsView(),
-            equalWeightParams()
+        row1.addView(
+            target2Box.first,
+            weightParams()
         )
 
-        statsCard.addView(statsRow1)
+        statsCard.addView(row1)
 
-        val statsRow2 = LinearLayout(this).apply {
+        // Second row
+
+        val row2 = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
         }
 
-        limitText = statBox(
+        val limitBoxStat = createStatBox(
             "Limit",
             "Unlimited",
             orange
         )
 
-        remainingText = statBox(
+        val remainingBox = createStatBox(
             "Remaining",
             "Unlimited",
             green
         )
 
-        statsRow2.addView(
-            limitText.parentAsView(),
-            equalWeightParams()
+        limitText = limitBoxStat.second
+        remainingText = remainingBox.second
+
+        row2.addView(
+            limitBoxStat.first,
+            weightParams()
         )
 
-        statsRow2.addView(
-            remainingText.parentAsView(),
-            equalWeightParams()
+        row2.addView(
+            remainingBox.first,
+            weightParams()
         )
 
         statsCard.addView(
-            statsRow2,
+            row2,
             marginParams(0, 8, 0, 0)
         )
-
-        // Progress
 
         progressText = TextView(this).apply {
             text = "Progress: 0%"
             textSize = 15f
+            gravity = Gravity.CENTER
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(darkBlue)
-            gravity = Gravity.CENTER
             setPadding(0, 15, 0, 5)
         }
 
@@ -557,9 +538,9 @@ class MainActivity : Activity() {
             marginParams(0, 0, 0, 14)
         )
 
-        // --------------------------------------------------------
-        // PERMISSIONS CARD
-        // --------------------------------------------------------
+        // ========================================================
+        // PERMISSIONS
+        // ========================================================
 
         val permissionCard = card()
 
@@ -568,28 +549,18 @@ class MainActivity : Activity() {
         )
 
         val accessibilityButton = Button(this).apply {
-            text = "⚙  ACCESSIBILITY SETTINGS"
+            text = "ACCESSIBILITY SETTINGS"
             textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
+
             background = roundedBackground(
                 blue,
                 18
             )
 
             setOnClickListener {
-                try {
-                    startActivity(
-                        Intent(
-                            Settings.ACTION_ACCESSIBILITY_SETTINGS
-                        )
-                    )
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Unable to open settings",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                openAccessibilitySettings()
             }
         }
 
@@ -602,9 +573,11 @@ class MainActivity : Activity() {
         )
 
         val overlayButton = Button(this).apply {
-            text = "▱  OVERLAY SETTINGS"
+            text = "OVERLAY SETTINGS"
             textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
+
             background = roundedBackground(
                 purple,
                 18
@@ -653,7 +626,10 @@ class MainActivity : Activity() {
             .trim()
             .toLongOrNull()
 
-        if (min == null || max == null || limit == null) {
+        if (min == null ||
+            max == null ||
+            limit == null
+        ) {
             Toast.makeText(
                 this,
                 "Please enter valid numbers",
@@ -662,7 +638,7 @@ class MainActivity : Activity() {
             return
         }
 
-        if (min < 50) {
+        if (min < 50L) {
             Toast.makeText(
                 this,
                 "Minimum interval must be at least 50 ms",
@@ -680,7 +656,7 @@ class MainActivity : Activity() {
             return
         }
 
-        if (limit < 0) {
+        if (limit < 0L) {
             Toast.makeText(
                 this,
                 "Click limit cannot be negative",
@@ -695,13 +671,13 @@ class MainActivity : Activity() {
             .putLong("click_limit", limit)
             .apply()
 
+        refreshStatistics()
+
         Toast.makeText(
             this,
             "Settings saved ✓",
             Toast.LENGTH_SHORT
         ).show()
-
-        refreshStatistics()
     }
 
     // ============================================================
@@ -723,7 +699,7 @@ class MainActivity : Activity() {
 
         Toast.makeText(
             this,
-            "$min – $max ms selected",
+            "$min - $max ms selected",
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -762,41 +738,36 @@ class MainActivity : Activity() {
             return
         }
 
-        val countPrefs =
-            getSharedPreferences(
-                "counting",
-                MODE_PRIVATE
-            )
+        val countPrefs = getSharedPreferences(
+            "counting",
+            MODE_PRIVATE
+        )
 
-        val total =
-            countPrefs.getLong(
-                "total_clicks",
-                0L
-            )
+        val total = countPrefs.getLong(
+            "total_clicks",
+            0L
+        )
 
-        val target1 =
-            countPrefs.getLong(
-                "target1_clicks",
-                0L
-            )
+        val target1 = countPrefs.getLong(
+            "target1_clicks",
+            0L
+        )
 
-        val target2 =
-            countPrefs.getLong(
-                "target2_clicks",
-                0L
-            )
+        val target2 = countPrefs.getLong(
+            "target2_clicks",
+            0L
+        )
 
-        val limit =
-            prefs.getLong(
-                "click_limit",
-                0L
-            )
+        val limit = prefs.getLong(
+            "click_limit",
+            0L
+        ).coerceAtLeast(0L)
 
         totalText.text = total.toString()
         target1Text.text = target1.toString()
         target2Text.text = target2.toString()
 
-        if (limit <= 0) {
+        if (limit == 0L) {
 
             limitText.text = "Unlimited"
             remainingText.text = "Unlimited"
@@ -806,35 +777,66 @@ class MainActivity : Activity() {
 
             limitText.text = limit.toString()
 
-            val remaining =
-                (limit - total)
-                    .coerceAtLeast(0L)
+            val remaining = (
+                limit - total
+            ).coerceAtLeast(0L)
 
             remainingText.text =
                 remaining.toString()
 
             val percentage =
-                ((total.toDouble() / limit.toDouble()) * 100)
+                ((total.toDouble() /
+                        limit.toDouble()) * 100.0)
                     .coerceIn(0.0, 100.0)
 
             progressText.text =
                 "Progress: ${percentage.toInt()}%"
         }
 
-        if (limit > 0 && total >= limit) {
-            statusText.text = "LIMIT REACHED"
-            statusText.setTextColor(red)
-        } else if (total > 0) {
-            statusText.text = "DATA SAVED"
-            statusText.setTextColor(green)
-        } else {
-            statusText.text = "READY"
-            statusText.setTextColor(green)
+        when {
+            limit > 0L && total >= limit -> {
+                statusText.text = "LIMIT REACHED"
+                statusText.setTextColor(red)
+            }
+
+            total > 0L -> {
+                statusText.text = "DATA SAVED"
+                statusText.setTextColor(green)
+            }
+
+            else -> {
+                statusText.text = "READY"
+                statusText.setTextColor(green)
+            }
         }
     }
 
     // ============================================================
-    // OVERLAY SETTINGS
+    // ACCESSIBILITY
+    // ============================================================
+
+    private fun openAccessibilitySettings() {
+
+        try {
+
+            startActivity(
+                Intent(
+                    Settings.ACTION_ACCESSIBILITY_SETTINGS
+                )
+            )
+
+        } catch (e: Exception) {
+
+            Toast.makeText(
+                this,
+                "Unable to open Accessibility Settings",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    // ============================================================
+    // OVERLAY
     // ============================================================
 
     private fun openOverlaySettings() {
@@ -889,7 +891,9 @@ class MainActivity : Activity() {
 
     private fun requestNotificationPermission() {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >=
+            Build.VERSION_CODES.TIRAMISU
+        ) {
 
             if (
                 checkSelfPermission(
@@ -915,12 +919,14 @@ class MainActivity : Activity() {
 
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(16, 16, 16, 16)
+            setPadding(15, 15, 15, 15)
+
             background = roundedBackground(
                 Color.WHITE,
                 22
             )
-            elevation = 4f
+
+            elevation = 3f
         }
     }
 
@@ -930,10 +936,10 @@ class MainActivity : Activity() {
 
         return TextView(this).apply {
             this.text = text
-            textSize = 20f
+            textSize = 19f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(darkBlue)
-            setPadding(2, 0, 2, 14)
+            setPadding(2, 0, 2, 12)
         }
     }
 
@@ -944,14 +950,21 @@ class MainActivity : Activity() {
 
         return TextView(this).apply {
             this.text = "$icon\n$text"
-            textSize = 13f
+            textSize = 12f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
+
             background = roundedBackground(
-                Color.argb(55, 255, 255, 255),
-                15
+                Color.argb(
+                    50,
+                    255,
+                    255,
+                    255
+                ),
+                14
             )
-            setPadding(5, 8, 5, 8)
+
+            setPadding(4, 8, 4, 8)
         }
     }
 
@@ -962,30 +975,34 @@ class MainActivity : Activity() {
 
         return Button(this).apply {
             text = "$title\n$subtitle"
-            textSize = 11f
+            textSize = 10f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(darkBlue)
+
             background = roundedBackground(
                 Color.rgb(232, 240, 255),
                 15
             )
-            minimumHeight = 65
+
+            minimumHeight = 62
         }
     }
 
+    // Returns both container and EditText
     private fun inputBox(
         label: String,
-        hint: String
-    ): LinearLayout {
+        hint: String,
+        tagName: String
+    ): Pair<LinearLayout, EditText> {
 
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(5, 0, 5, 0)
+            setPadding(4, 0, 4, 0)
         }
 
         val labelView = TextView(this).apply {
             text = label
-            textSize = 12f
+            textSize = 11f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(darkBlue)
         }
@@ -993,37 +1010,34 @@ class MainActivity : Activity() {
         box.addView(labelView)
 
         val input = EditText(this).apply {
+
             inputType =
-                android.text.InputType.TYPE_CLASS_NUMBER
+                InputType.TYPE_CLASS_NUMBER
 
             this.hint = hint
-            textSize = 17f
+            this.tag = tagName
+
+            textSize = 16f
             setTextColor(darkBlue)
             setSingleLine(true)
 
             background = roundedBackground(
-                Color.rgb(248, 250, 255),
+                Color.rgb(247, 249, 253),
                 12
             )
 
-            setPadding(10, 5, 10, 5)
-
-            tag = when {
-                label.startsWith("Minimum") -> "min"
-                label.startsWith("Maximum") -> "max"
-                else -> "limit"
-            }
+            setPadding(10, 0, 10, 0)
         }
 
         box.addView(
             input,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                55
+                52
             )
         )
 
-        return box
+        return Pair(box, input)
     }
 
     private fun targetView(
@@ -1039,7 +1053,7 @@ class MainActivity : Activity() {
 
         val circle = TextView(this).apply {
             text = number
-            textSize = 25f
+            textSize = 23f
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
@@ -1049,34 +1063,35 @@ class MainActivity : Activity() {
         box.addView(
             circle,
             LinearLayout.LayoutParams(
-                50,
-                50
+                48,
+                48
             )
         )
 
-        val text = TextView(this).apply {
-            this.text = label
-            textSize = 11f
+        val labelView = TextView(this).apply {
+            text = label
+            textSize = 10f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(darkBlue)
             gravity = Gravity.CENTER
+            setTextColor(darkBlue)
         }
 
-        box.addView(text)
+        box.addView(labelView)
 
         return box
     }
 
-    private fun statBox(
+    private fun createStatBox(
         label: String,
         value: String,
         color: Int
-    ): TextView {
+    ): Pair<LinearLayout, TextView> {
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(5, 10, 5, 10)
+
             background = roundedBackground(
                 Color.rgb(242, 246, 253),
                 16
@@ -1085,7 +1100,7 @@ class MainActivity : Activity() {
 
         val labelView = TextView(this).apply {
             text = label
-            textSize = 12f
+            textSize = 11f
             gravity = Gravity.CENTER
             setTextColor(darkBlue)
         }
@@ -1094,7 +1109,7 @@ class MainActivity : Activity() {
 
         val valueView = TextView(this).apply {
             text = value
-            textSize = 21f
+            textSize = 20f
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
             setTextColor(color)
@@ -1102,14 +1117,15 @@ class MainActivity : Activity() {
 
         container.addView(valueView)
 
-        return valueView
+        return Pair(
+            container,
+            valueView
+        )
     }
 
-    // Get parent container of TextView
-    private fun TextView.parentAsView(): View {
-
-        return this.parent as View
-    }
+    // ============================================================
+    // DRAWABLE HELPERS
+    // ============================================================
 
     private fun roundedBackground(
         color: Int,
@@ -1132,7 +1148,11 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun equalWeightParams():
+    // ============================================================
+    // LAYOUT HELPERS
+    // ============================================================
+
+    private fun weightParams():
             LinearLayout.LayoutParams {
 
         return LinearLayout.LayoutParams(
@@ -1140,7 +1160,12 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams.WRAP_CONTENT,
             1f
         ).apply {
-            setMargins(4, 0, 4, 0)
+            setMargins(
+                3,
+                0,
+                3,
+                0
+            )
         }
     }
 
