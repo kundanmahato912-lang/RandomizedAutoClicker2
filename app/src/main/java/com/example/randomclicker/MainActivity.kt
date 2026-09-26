@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -18,25 +19,33 @@ class MainActivity : Activity() {
 
     private lateinit var minIntervalInput: EditText
     private lateinit var maxIntervalInput: EditText
+    private lateinit var clickLimitInput: EditText
+    private lateinit var statsText: TextView
     private lateinit var prefs: SharedPreferences
 
     companion object {
         private const val NOTIFICATION_PERMISSION_REQUEST = 1001
+
         private const val DEFAULT_MIN_INTERVAL = 500L
         private const val DEFAULT_MAX_INTERVAL = 700L
+        private const val DEFAULT_CLICK_LIMIT = 0L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        prefs = getSharedPreferences(
-            "settings",
-            MODE_PRIVATE
-        )
+        prefs = getSharedPreferences("settings", MODE_PRIVATE)
 
         createUI()
-
         requestNotificationPermission()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (::statsText.isInitialized) {
+            refreshStatistics()
+        }
     }
 
     private fun createUI() {
@@ -44,13 +53,18 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(40, 50, 40, 40)
+            setPadding(32, 32, 32, 32)
         }
+
+        // =========================
+        // TITLE
+        // =========================
 
         val title = TextView(this).apply {
             text = "Randomized Alternating Auto Clicker"
-            textSize = 22f
+            textSize = 24f
             gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 20)
         }
 
         root.addView(
@@ -61,13 +75,22 @@ class MainActivity : Activity() {
             )
         )
 
+        // =========================
+        // DESCRIPTION
+        // =========================
+
         val description = TextView(this).apply {
-            text =
-                "Randomly click Target 1 or Target 2.\n" +
-                "Interval will also be random between Min and Max."
+            text = """
+                Two floating targets: ① and ②
+                
+                Each click randomly selects ONE target.
+                The delay between clicks is randomized
+                between the minimum and maximum interval.
+            """.trimIndent()
+
             textSize = 16f
             gravity = Gravity.CENTER
-            setPadding(0, 30, 0, 30)
+            setPadding(0, 0, 0, 25)
         }
 
         root.addView(
@@ -78,24 +101,20 @@ class MainActivity : Activity() {
             )
         )
 
+        // =========================
         // MINIMUM INTERVAL
+        // =========================
+
         val minLabel = TextView(this).apply {
-            text = "Minimum interval (milliseconds)"
+            text = "Minimum Interval (ms)"
             textSize = 16f
         }
 
-        root.addView(
-            minLabel,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
+        root.addView(minLabel)
 
         minIntervalInput = EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
             hint = "Example: 500"
-            inputType =
-                android.text.InputType.TYPE_CLASS_NUMBER
 
             setText(
                 prefs.getLong(
@@ -110,29 +129,25 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        // MAXIMUM INTERVAL
-        val maxLabel = TextView(this).apply {
-            text = "Maximum interval (milliseconds)"
-            textSize = 16f
-        }
-
-        root.addView(
-            maxLabel,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                topMargin = 20
+                bottomMargin = 15
             }
         )
 
+        // =========================
+        // MAXIMUM INTERVAL
+        // =========================
+
+        val maxLabel = TextView(this).apply {
+            text = "Maximum Interval (ms)"
+            textSize = 16f
+        }
+
+        root.addView(maxLabel)
+
         maxIntervalInput = EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
             hint = "Example: 700"
-            inputType =
-                android.text.InputType.TYPE_CLASS_NUMBER
 
             setText(
                 prefs.getLong(
@@ -147,15 +162,53 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                bottomMargin = 15
+            }
         )
 
-        // SAVE BUTTON
+        // =========================
+        // CLICK LIMIT
+        // =========================
+
+        val limitLabel = TextView(this).apply {
+            text = "Click Limit (0 = Unlimited)"
+            textSize = 16f
+        }
+
+        root.addView(limitLabel)
+
+        clickLimitInput = EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            hint = "Example: 500   |   0 = Unlimited"
+
+            setText(
+                prefs.getLong(
+                    "click_limit",
+                    DEFAULT_CLICK_LIMIT
+                ).toString()
+            )
+        }
+
+        root.addView(
+            clickLimitInput,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 20
+            }
+        )
+
+        // =========================
+        // SAVE SETTINGS BUTTON
+        // =========================
+
         val saveButton = Button(this).apply {
-            text = "SAVE INTERVAL"
+            text = "SAVE SETTINGS"
 
             setOnClickListener {
-                saveIntervals()
+                saveSettings()
             }
         }
 
@@ -164,26 +217,62 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = 25
-            }
+            )
         )
 
+        // =========================
+        // STATISTICS TITLE
+        // =========================
+
+        val statsTitle = TextView(this).apply {
+            text = "CLICK STATISTICS"
+            textSize = 20f
+            gravity = Gravity.CENTER
+            setPadding(0, 30, 0, 15)
+        }
+
+        root.addView(
+            statsTitle,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        // =========================
+        // STATISTICS
+        // =========================
+
+        statsText = TextView(this).apply {
+            textSize = 17f
+            gravity = Gravity.CENTER
+            setPadding(20, 20, 20, 20)
+        }
+
+        root.addView(
+            statsText,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        // =========================
         // ACCESSIBILITY SETTINGS
+        // =========================
+
         val accessibilityButton = Button(this).apply {
             text = "OPEN ACCESSIBILITY SETTINGS"
 
             setOnClickListener {
                 try {
                     startActivity(
-                        Intent(
-                            Settings.ACTION_ACCESSIBILITY_SETTINGS
-                        )
+                        Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                     )
                 } catch (e: Exception) {
                     Toast.makeText(
                         this@MainActivity,
-                        "Unable to open Accessibility settings",
+                        "Unable to open Accessibility Settings",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -196,32 +285,58 @@ class MainActivity : Activity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                topMargin = 15
+                topMargin = 20
             }
         )
 
+        // =========================
         // OVERLAY SETTINGS
+        // =========================
+
         val overlayButton = Button(this).apply {
             text = "OPEN OVERLAY SETTINGS"
 
             setOnClickListener {
-                try {
-                    val intent =
-                        Intent(
-                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION
-                        )
 
-                    intent.data =
-                        android.net.Uri.parse(
-                            "package:$packageName"
-                        )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-                    startActivity(intent)
+                    if (!Settings.canDrawOverlays(this@MainActivity)) {
 
-                } catch (e: Exception) {
+                        try {
+                            val intent = Intent(
+                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION
+                            )
+
+                            intent.data =
+                                android.net.Uri.parse(
+                                    "package:$packageName"
+                                )
+
+                            startActivity(intent)
+
+                        } catch (e: Exception) {
+
+                            startActivity(
+                                Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION
+                                )
+                            )
+                        }
+
+                    } else {
+
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Overlay permission already enabled",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                } else {
+
                     Toast.makeText(
                         this@MainActivity,
-                        "Overlay settings unavailable",
+                        "Overlay permission is not required on this Android version",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -233,87 +348,202 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = 15
-            }
+            )
         )
 
         setContentView(root)
+
+        // Initial statistics
+        refreshStatistics()
     }
 
-    private fun saveIntervals() {
+    // ============================================================
+    // SAVE SETTINGS
+    // ============================================================
 
-        val minValue =
-            minIntervalInput.text
-                .toString()
-                .trim()
-                .toLongOrNull()
+    private fun saveSettings() {
 
-        val maxValue =
-            maxIntervalInput.text
-                .toString()
-                .trim()
-                .toLongOrNull()
+        val minValue = minIntervalInput.text
+            .toString()
+            .trim()
+            .toLongOrNull()
 
-        if (minValue == null || maxValue == null) {
+        val maxValue = maxIntervalInput.text
+            .toString()
+            .trim()
+            .toLongOrNull()
 
+        val clickLimitValue = clickLimitInput.text
+            .toString()
+            .trim()
+            .toLongOrNull()
+
+        // Check minimum interval
+        if (minValue == null) {
             Toast.makeText(
                 this,
-                "Please enter valid numbers",
+                "Enter a valid minimum interval",
                 Toast.LENGTH_SHORT
             ).show()
-
             return
         }
 
+        // Check maximum interval
+        if (maxValue == null) {
+            Toast.makeText(
+                this,
+                "Enter a valid maximum interval",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        // Check click limit
+        if (clickLimitValue == null) {
+            Toast.makeText(
+                this,
+                "Enter a valid click limit",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        // Minimum interval validation
         if (minValue < 50L) {
-
             Toast.makeText(
                 this,
-                "Minimum interval cannot be below 50 ms",
+                "Minimum interval must be at least 50 ms",
                 Toast.LENGTH_SHORT
             ).show()
-
             return
         }
 
+        // Maximum cannot be smaller than minimum
         if (maxValue < minValue) {
-
             Toast.makeText(
                 this,
-                "Maximum interval must be greater than or equal to Minimum",
-                Toast.LENGTH_LONG
+                "Maximum interval cannot be smaller than minimum interval",
+                Toast.LENGTH_SHORT
             ).show()
-
             return
         }
 
+        // Click limit cannot be negative
+        if (clickLimitValue < 0L) {
+            Toast.makeText(
+                this,
+                "Click limit cannot be negative",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        // Save everything
         prefs.edit()
-            .putLong(
-                "min_interval_ms",
-                minValue
-            )
-            .putLong(
-                "max_interval_ms",
-                maxValue
-            )
+            .putLong("min_interval_ms", minValue)
+            .putLong("max_interval_ms", maxValue)
+            .putLong("click_limit", clickLimitValue)
             .apply()
+
+        refreshStatistics()
+
+        val limitText =
+            if (clickLimitValue == 0L) {
+                "Unlimited"
+            } else {
+                clickLimitValue.toString()
+            }
 
         Toast.makeText(
             this,
-            "Interval saved: $minValue - $maxValue ms",
+            "Settings saved\n$minValue - $maxValue ms\nLimit: $limitText",
             Toast.LENGTH_SHORT
         ).show()
     }
 
+    // ============================================================
+    // REFRESH STATISTICS
+    // ============================================================
+
+    private fun refreshStatistics() {
+
+        if (!::statsText.isInitialized) {
+            return
+        }
+
+        // Counting data is saved by ClickAccessibilityService
+        val countPrefs =
+            getSharedPreferences("counting", MODE_PRIVATE)
+
+        val totalClicks =
+            countPrefs.getLong("total_clicks", 0L)
+
+        val target1Clicks =
+            countPrefs.getLong("target1_clicks", 0L)
+
+        val target2Clicks =
+            countPrefs.getLong("target2_clicks", 0L)
+
+        val clickLimit =
+            prefs.getLong(
+                "click_limit",
+                DEFAULT_CLICK_LIMIT
+            ).coerceAtLeast(0L)
+
+        val remaining =
+            if (clickLimit == 0L) {
+                "Unlimited"
+            } else {
+                (clickLimit - totalClicks)
+                    .coerceAtLeast(0L)
+                    .toString()
+            }
+
+        val status = when {
+            clickLimit > 0L && totalClicks >= clickLimit ->
+                "LIMIT REACHED"
+
+            totalClicks > 0L ->
+                "DATA SAVED"
+
+            else ->
+                "READY"
+        }
+
+        val limitText =
+            if (clickLimit == 0L) {
+                "Unlimited"
+            } else {
+                clickLimit.toString()
+            }
+
+        statsText.text = """
+            Total Clicks: $totalClicks
+            
+            Target ① Clicks: $target1Clicks
+            
+            Target ② Clicks: $target2Clicks
+            
+            Click Limit: $limitText
+            
+            Remaining: $remaining
+            
+            Status: $status
+        """.trimIndent()
+    }
+
+    // ============================================================
+    // NOTIFICATION PERMISSION
+    // ============================================================
+
     private fun requestNotificationPermission() {
 
-        if (Build.VERSION.SDK_INT >= 33) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 
             if (
                 checkSelfPermission(
                     Manifest.permission.POST_NOTIFICATIONS
-                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                ) != PackageManager.PERMISSION_GRANTED
             ) {
 
                 requestPermissions(
@@ -331,27 +561,22 @@ class MainActivity : Activity() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-
         super.onRequestPermissionsResult(
             requestCode,
             permissions,
             grantResults
         )
 
-        if (
-            requestCode ==
-            NOTIFICATION_PERMISSION_REQUEST
-        ) {
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
 
             if (
                 grantResults.isNotEmpty() &&
-                grantResults[0] ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED
+                grantResults[0] == PackageManager.PERMISSION_GRANTED
             ) {
 
                 Toast.makeText(
                     this,
-                    "Notifications enabled",
+                    "Notification permission enabled",
                     Toast.LENGTH_SHORT
                 ).show()
 
@@ -359,8 +584,8 @@ class MainActivity : Activity() {
 
                 Toast.makeText(
                     this,
-                    "Notification permission is required for START/STOP notification",
-                    Toast.LENGTH_LONG
+                    "Notification permission not granted",
+                    Toast.LENGTH_SHORT
                 ).show()
             }
         }
